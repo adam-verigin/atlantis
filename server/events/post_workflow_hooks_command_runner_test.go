@@ -2,6 +2,7 @@ package events_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -246,10 +247,12 @@ func TestRunPostHooks_Clone(t *testing.T) {
 		}
 
 		cmd := &events.CommentCommand{
+			Name:  command.Plan,
 			Flags: []string{"comment", "args"},
 		}
 
 		expectedCtx := pCtx
+		expectedCtx.CommandName = "plan"
 		expectedCtx.EscapedCommentArgs = []string{"\\c\\o\\m\\m\\e\\n\\t", "\\a\\r\\g\\s"}
 
 		postWh.GlobalCfg = globalCfg
@@ -264,4 +267,47 @@ func TestRunPostHooks_Clone(t *testing.T) {
 		whPostWorkflowHookRunner.VerifyWasCalledOnce().Run(runtimematchers.AnyModelsWorkflowHookCommandContext(), EqString(testHook.RunCommand), EqString(repoDir))
 		Assert(t, *unlockCalled == true, "unlock function called")
 	})
+
+	for _, atlantisCommand := range command.AllCommentCommands {
+		testName := fmt.Sprintf("command name passed to webhooks: %s", atlantisCommand)
+		t.Run(testName, func(t *testing.T) {
+			postWorkflowHooksSetup(t)
+
+			unlockCalled := newBool(false)
+			unlockFn := func() {
+				unlockCalled = newBool(true)
+			}
+
+			globalCfg := valid.GlobalCfg{
+				Repos: []valid.Repo{
+					{
+						ID: fixtures.GithubRepo.ID(),
+						PostWorkflowHooks: []*valid.WorkflowHook{
+							&testHook,
+						},
+					},
+				},
+			}
+
+			cmd := &events.CommentCommand{
+				Name: atlantisCommand,
+			}
+
+			expectedCtx := pCtx
+			expectedCtx.CommandName = atlantisCommand.String()
+
+			postWh.GlobalCfg = globalCfg
+
+			When(postWhWorkingDirLocker.TryLock(fixtures.GithubRepo.FullName, newPull.Num, events.DefaultWorkspace, events.DefaultRepoRelDir)).ThenReturn(unlockFn, nil)
+			When(postWhWorkingDir.Clone(log, fixtures.GithubRepo, newPull, events.DefaultWorkspace)).ThenReturn(repoDir, false, nil)
+			When(whPostWorkflowHookRunner.Run(runtimematchers.AnyModelsWorkflowHookCommandContext(), EqString(testHook.RunCommand), EqString(repoDir))).ThenReturn(result, runtimeDesc, nil)
+
+			err := postWh.RunPostHooks(ctx, cmd)
+
+			Ok(t, err)
+			whPostWorkflowHookRunner.VerifyWasCalledOnce().Run(runtimematchers.AnyModelsWorkflowHookCommandContext(), EqString(testHook.RunCommand), EqString(repoDir))
+			Assert(t, *unlockCalled == true, "unlock function called")
+		})
+	}
+
 }

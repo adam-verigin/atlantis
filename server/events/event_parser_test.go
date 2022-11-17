@@ -747,6 +747,18 @@ func TestNewCommand_EmptyDirWorkspaceProject(t *testing.T) {
 	}, *cmd)
 }
 
+func TestEmptyCommand(t *testing.T) {
+	cmd := events.EmptyCommentCommand(command.Plan)
+	Equals(t, events.CommentCommand{
+		RepoRelDir:  "",
+		Flags:       nil,
+		Name:        command.Plan,
+		Verbose:     false,
+		Workspace:   "",
+		ProjectName: "",
+	}, *cmd)
+}
+
 func TestNewCommand_AllFieldsSet(t *testing.T) {
 	cmd := events.NewCommentCommand("dir", []string{"a", "b"}, command.Plan, true, false, "workspace", "project")
 	Equals(t, events.CommentCommand{

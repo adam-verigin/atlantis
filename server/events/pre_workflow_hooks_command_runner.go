@@ -69,8 +69,10 @@ func (w *DefaultPreWorkflowHooksCommandRunner) RunPreHooks(ctx *command.Context,
 		return err
 	}
 
+	var commandName string
 	var escapedArgs []string
 	if cmd != nil {
+		commandName = cmd.Name.String()
 		escapedArgs = escapeArgs(cmd.Flags)
 	}
 
@@ -82,6 +84,7 @@ func (w *DefaultPreWorkflowHooksCommandRunner) RunPreHooks(ctx *command.Context,
 			Pull:               pull,
 			User:               user,
 			Verbose:            false,
+			CommandName:        commandName,
 			EscapedCommentArgs: escapedArgs,
 			HookID:             uuid.NewString(),
 		},

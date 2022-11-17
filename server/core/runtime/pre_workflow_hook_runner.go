@@ -31,6 +31,7 @@ func (wh DefaultPreWorkflowHookRunner) Run(ctx models.WorkflowHookCommandContext
 		"BASE_BRANCH_NAME":   ctx.Pull.BaseBranch,
 		"BASE_REPO_NAME":     ctx.BaseRepo.Name,
 		"BASE_REPO_OWNER":    ctx.BaseRepo.Owner,
+		"COMMAND_NAME":       ctx.CommandName,
 		"COMMENT_ARGS":       strings.Join(ctx.EscapedCommentArgs, ","),
 		"DIR":                path,
 		"HEAD_BRANCH_NAME":   ctx.Pull.HeadBranch,

@@ -132,7 +132,7 @@ func (c CommentCommand) String() string {
 	return fmt.Sprintf("command=%q verbose=%t dir=%q workspace=%q project=%q flags=%q", c.Name.String(), c.Verbose, c.RepoRelDir, c.Workspace, c.ProjectName, strings.Join(c.Flags, ","))
 }
 
-// NewCommentCommand constructs a CommentCommand, setting all missing fields to defaults.
+// NewCommentCommand constructs a CommentCommand
 func NewCommentCommand(repoRelDir string, flags []string, name command.Name, verbose, autoMergeDisabled bool, workspace string, project string) *CommentCommand {
 	// If repoRelDir was empty we want to keep it that way to indicate that it
 	// wasn't specified in the comment.
@@ -151,6 +151,11 @@ func NewCommentCommand(repoRelDir string, flags []string, name command.Name, ver
 		AutoMergeDisabled: autoMergeDisabled,
 		ProjectName:       project,
 	}
+}
+
+// EmptyCommentCommand constructs a CommentCommand, setting all missing fields to defaults.
+func EmptyCommentCommand(name command.Name) *CommentCommand {
+	return NewCommentCommand("", nil, name, false, false, "", "")
 }
 
 //go:generate pegomock generate -m --package mocks -o mocks/mock_event_parsing.go EventParsing
